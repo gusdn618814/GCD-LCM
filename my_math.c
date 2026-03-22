@@ -1,43 +1,42 @@
 #include "my_math.h"
 #include <stdlib.h>   /* llabs */
 
-/* GCD: Euclidean Algorithm */
+/*
+ *  최대공약수 – 유클리드 호제법
+ *  gcd(a, b) = gcd(b, a % b)
+ */
 long long my_gcd_ll(long long a, long long b)
 {
-    a = llabs(a);
-    b = llabs(b);
-
-    if (a == 0 && b == 0) return 0;
+    if (a < 0) a = llabs(a);
+    if (b < 0) b = llabs(b);
 
     while (b != 0) {
-        long long r = a % b;
-        a = b;
-        b = r;
+        long long t = b;
+        b = a % b;
+        a = t;
     }
-    return a;
+    return a;          /* b == 0 이면 a 가 GCD */
 }
 
-/* LCM with overflow check (MSVC 호환: __int128 미사용) */
-long long my_lcm_ll(long long a, long long b, int *err)
+/*
+ *  최소공배수 – |a * b| / gcd(a, b)
+ *  오버플로 방지: (a / gcd) * b 순서로 계산
+ */
+long long my_lcm_ll(long long a, long long b, int* err)
 {
     if (err) *err = MYMATH_OK;
 
     if (a == 0 || b == 0) return 0;
 
     long long g = my_gcd_ll(a, b);
+    long long ax = llabs(a) / g;        /* 먼저 나눠서 크기를 줄임 */
+    long long bx = llabs(b);
 
-    /* (a/g) * b 형태로 overflow 위험을 줄임 */
-    long long x = a / g;
-
-    /* overflow check: |x * b| <= LLONG_MAX */
-    long long ax = llabs(x);
-    long long ab = llabs(b);
-
-    if (ax != 0 && ab > LLONG_MAX / ax) {
+    /* 오버플로 검사: ax * bx > LLONG_MAX ? */
+    if (ax != 0 && bx > LLONG_MAX / ax) {
         if (err) *err = MYMATH_ERR_OVERFLOW;
         return 0;
     }
 
-    long long l = x * b;
-    return llabs(l);
+    return ax * bx;
 }
